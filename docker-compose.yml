@@ -1,8 +1,18 @@
 volumes:
   open-webui:
   librechat-data:
+  mongodb-data:
 
 services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -23,3 +33,8 @@ services:
       - "3080:3080"
     volumes:
       - librechat-data:/app/api/data
+      - ./librechat.yaml:/workspaces/local-ai-packaged/librechat.yaml
+    env_file:
+      - .env.librechat
+    depends_on:
+      - mongodb

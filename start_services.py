@@ -3,8 +3,8 @@
 start_services.py
 
 This script starts the Supabase stack first, waits for it to initialize, and then starts
-the Open WebUI service. Both stacks use the same Docker Compose project name ("localai")
-so they appear together in Docker Desktop.
+the Local AI stack (OpenWebUI, LibreChat, MongoDB). Both stacks use the same Docker
+Compose project name ("localai") so they appear together in Docker Desktop.
 """
 
 import os
@@ -46,6 +46,14 @@ def prepare_supabase_env():
 def stop_existing_containers():
     """Stop and remove existing containers for our unified project ('localai')."""
     print("Stopping and removing existing containers for the unified project 'localai'...")
+    
+    # Force remove any stuck containers first
+    try:
+        run_command(["docker", "rm", "-f", "mongodb", "open-webui"])
+    except subprocess.CalledProcessError:
+        # Ignore errors if containers don't exist
+        pass
+    
     run_command([
         "docker", "compose",
         "-p", "localai",
@@ -61,26 +69,25 @@ def start_supabase():
         "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", "up", "-d"
     ])
 
-def start_webui():
-    """Start the Open WebUI service."""
-    print("Starting Open WebUI service...")
+def start_local_ai_stack():
+    """Start the Local AI stack (OpenWebUI, LibreChat, MongoDB, etc.)."""
+    print("Starting Local AI services (OpenWebUI, LibreChat, MongoDB)...")
     run_command([
-        "docker", "compose", "-p", "localai", "-f", "docker-compose.yml", "up", "-d"
+        "docker", "compose", "-p", "localai", "-f", "docker-compose.yml", "up"
     ])
 
 def main():
     stop_existing_containers()
     
-    # Start Supabase first
-    clone_supabase_repo()
-    prepare_supabase_env()
-    start_supabase()    
-    # Give Supabase some time to initialize
-    print("Waiting for Supabase to initialize...")
-    time.sleep(10)
+    # Start Supabase
+    # clone_supabase_repo()
+    # prepare_supabase_env()
+    # start_supabase()    
+    # print("Waiting for Supabase to initialize...")
+    # time.sleep(10)
     
-    # Then start the Open WebUI service
-    start_webui()
+    # Then start the Local AI stack
+    start_local_ai_stack()
 
 if __name__ == "__main__":
     main()
